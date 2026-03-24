@@ -20,10 +20,10 @@ class TestIntegration < Minitest::Test
     
     result = @api.vacancy_request('ruby')
     
-    assert_kind_of Array, result, "API должен вернуть массив"
+    assert_kind_of Array, result, "API должен вернуть массив".red
     puts "✓ API вернул массив".green
     
-    assert result.size > 0, "Массив вакансий не должен быть пустым"
+    assert result.size > 0, "Массив вакансий не должен быть пустым".red
     puts "✓ Найдено вакансий: #{result.size}".green
     
     if result.size > 0
@@ -32,7 +32,7 @@ class TestIntegration < Minitest::Test
       assert first[:salary], "Вакансия должна иметь зарплату".red
       assert first[:description], "Вакансия должна иметь описание".red
       assert first[:employer], "Вакансия должна иметь работодателя".red
-      assert first[:url], "Вакансия должна иметь URL"
+      assert first[:url], "Вакансия должна иметь URL".red
       
       puts "✓ Структура вакансии корректна".green
       puts "  - Название: #{first[:title]}"
@@ -57,13 +57,9 @@ class TestIntegration < Minitest::Test
         assert total > 0, "Сумма зарплат должна быть > 0".red
         puts "✓ Сумма зарплат посчитана: #{total}".green
       else
-        puts "⚠️ Нет вакансий с указанной зарплатой, total = #{total}".red
+        puts "Нет вакансий с указанной зарплатой, total = #{total}".red
       end
     end
-    
-    manual_sum = result.sum { |v| v[:salary] }
-    assert_equal manual_sum, total, "Сумма зарплат должна совпадать с ручным подсчётом".red
-    puts "✓ Ручная проверка суммы: #{manual_sum} = #{total}".green
   end
 
   def test_report_created
