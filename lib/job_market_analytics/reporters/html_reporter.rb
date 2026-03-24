@@ -3,7 +3,7 @@ module JobMarketAnalytics
     class HtmlReporter
       attr_reader :vacancies, :title, :output_path, :average_salary
 
-      def initialize(vacancies, title = "Job Market Report", output_path = nil, average_salary_formatted)
+      def initialize(vacancies, title = "Job Market Report", average_salary_formatted = "0", output_path = nil)
         @vacancies = vacancies
         @title = title
         @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
@@ -29,7 +29,7 @@ module JobMarketAnalytics
         html += "<h1>#{@title}</h1>\n"
         html += "<div class='stats'>\n"
         html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
-        html += "<p>Average salary: <strong>≈#{@average_salary} руб.</strong></p>\n"
+        html += "<p>Average salary: <strong>≈#{@average_salary / @vacancies.size} руб.</strong></p>\n"
         html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
         html += "</div>\n"
         
