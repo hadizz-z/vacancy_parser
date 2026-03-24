@@ -1,7 +1,6 @@
 module JobMarketAnalytics
   module Reporters
     class HtmlReporter
-<<<<<<< HEAD
       attr_reader :vacancies, :title, :output_path, :average_salary
 
       def initialize(vacancies, title = "Job Market Report", average_salary_formatted = "0", output_path = nil)
@@ -9,14 +8,6 @@ module JobMarketAnalytics
         @title = title
         @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
         @average_salary = average_salary_formatted
-=======
-      attr_reader :vacancies, :title, :output_path
-
-      def initialize(vacancies, title = "Job Market Report", output_path = nil)
-        @vacancies = vacancies
-        @title = title
-        @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
       end
 
       def generate
@@ -38,11 +29,7 @@ module JobMarketAnalytics
         html += "<h1>#{@title}</h1>\n"
         html += "<div class='stats'>\n"
         html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
-<<<<<<< HEAD
         html += "<p>Average salary: <strong>≈#{@average_salary / @vacancies.size} руб.</strong></p>\n"
-=======
-        html += "<p>Average salary: <strong>#{average_salary_formatted}</strong></p>\n"
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
         html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
         html += "</div>\n"
         
@@ -50,11 +37,7 @@ module JobMarketAnalytics
           html += "<div class='vacancy'>\n"
           html += "<div class='vacancy-title'>#{escape_html(v.title)}</div>\n"
           html += "<div>Employer: #{escape_html(v.employer) || 'Not specified'}</div>\n"
-<<<<<<< HEAD
           html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary} руб.</div>\n"
-=======
-          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary}</div>\n"
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
           html += "<div class='vacancy-description'>#{escape_html(v.description || 'No description')}</div>\n"
           html += "<div>\n"
           v.extract_technologies.each do |tech|
@@ -88,15 +71,6 @@ module JobMarketAnalytics
         (salaries.sum / salaries.size).round
       end
 
-<<<<<<< HEAD
-=======
-      def average_salary_formatted
-        avg = average_salary
-        return "No data" if avg == 0
-        avg.to_s
-      end
-
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
       def unique_employers_count
         @vacancies.map(&:employer).compact.uniq.size
       end
