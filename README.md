@@ -1,127 +1,33 @@
-\# JobMarketAnalytics
+# JobMarketAnalytics
 
-<<<<<<< HEAD
-Ruby gem для анализа рынка вакансий и генерации HTML отчетов.
-
-\## Концепция
-
-Gem умеет ходить в открытое API сайтов по поиску работы, собирать свежие вакансии по заданным критериям, анализировать их и отдавать результат в структурированном виде.
-
-\## Для чего это нужно
-
-=======
-
+[![Tests](https://github.com/hadizz-z/vacancy_parser/actions/workflows/test.yml/badge.svg)](https://github.com/hadizz-z/vacancy_parser/actions/workflows/test.yml)
 
 Ruby gem для анализа рынка вакансий и генерации HTML отчетов.
 
-
-
-\## Концепция
-
-
+## Концепция
 
 Gem умеет ходить в открытое API сайтов по поиску работы, собирать свежие вакансии по заданным критериям, анализировать их и отдавать результат в структурированном виде.
 
+## Для чего это нужно
+
+- HR-специалисты могут быстро получить срез зарплат по рынку
+- Разработчики могут понять, какие технологии сейчас востребованы
+- Можно интегрировать гем в телеграм-бота или CI/CD пайплайн для еженедельной рассылки отчета
+
+## Установка
+
+```bash
+git clone https://github.com/hadizz-z/vacancy_parser.git
+cd vacancy_parser
+bundle install
 
 
-\## Для чего это нужно
+## Авторы
 
-
-
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
-\- HR-специалисты могут быстро получить срез зарплат по рынку
-
-\- Разработчики могут понять, какие технологии сейчас востребованы
-
-\- Можно интегрировать гем в телеграм-бота или CI/CD пайплайн для еженедельной рассылки отчета
-
-<<<<<<< HEAD
-\## Инструкция
-
-\- Запуск тестов: ruby test/test_integration.rb
-
-\- Запуск приложения: ruby test.rb
-
-\## Структура гема
-
-job_market_analytics/
-
-├── lib/
-
-│ ├── job_market_analytics.rb # Основная точка входа
-
-│ ├── job_market_analytics/
-=======
-
-
-\## Структура гема
-
-job\_market\_analytics/
-
-├── lib/
-
-│ ├── job\_market\_analytics.rb # Основная точка входа
-
-│ ├── job\_market\_analytics/
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
-
-│ │ ├── version.rb # Версионирование
-
-│ │ ├── client.rb # Класс для работы с API
-
-│ │ ├── models/
-
-│ │ │ ├── vacancy.rb # Модель вакансии
-
-│ │ │ └── summary.rb # Агрегированные данные
-
-│ │ └── reporters/
-
-<<<<<<< HEAD
-│ │ ├── base_reporter.rb # Базовый класс репортера
-
-│ │ └── html_reporter.rb # Генератор HTML
-
-│ │ └── api/
-
-│ │ ├── head_hunter_api.rb # Запросы в API
-
-├── test/
-
-│ │ └── test\_integration # Интеграционные тесты
-
-├── ruby/
-
-│ │ └── string.rb # Дополнение к String
-=======
-│ │ ├── base\_reporter.rb # Базовый класс репортера
-
-│ │ └── html\_reporter.rb # Генератор HTML
-
-├── spec/ # Тесты
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
-
-├── Gemfile
-
-├── README.md
-
-<<<<<<< HEAD
-└── job_market_analytics.gemspec
-=======
-└── job\_market\_analytics.gemspec
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
-
-Авторы
-
-Сентюрина Дарья- HTML репортер, модель Vacancy
-
-<<<<<<< HEAD
-Исакова Хадижат - API парсер
-=======
-
+Сентюрина Дарья - HTML репортер, модель Vacancy
 
 Исакова Хадижат - API парсер
 
+##Лицензия 
 
-
->>>>>>> 78d9af17130ee3cdf88e8162af52626c71082def
+MIT
