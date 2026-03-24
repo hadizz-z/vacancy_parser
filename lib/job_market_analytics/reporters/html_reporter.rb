@@ -1,12 +1,13 @@
 module JobMarketAnalytics
   module Reporters
     class HtmlReporter
-      attr_reader :vacancies, :title, :output_path
+      attr_reader :vacancies, :title, :output_path, :average_salary
 
-      def initialize(vacancies, title = "Job Market Report", output_path = nil)
+      def initialize(vacancies, title = "Job Market Report", output_path = nil, average_salary_formatted)
         @vacancies = vacancies
         @title = title
         @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
+        @average_salary = average_salary_formatted
       end
 
       def generate
@@ -28,7 +29,7 @@ module JobMarketAnalytics
         html += "<h1>#{@title}</h1>\n"
         html += "<div class='stats'>\n"
         html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
-        html += "<p>Average salary: <strong>#{average_salary_formatted}</strong></p>\n"
+        html += "<p>Average salary: <strong>≈#{@average_salary} руб.</strong></p>\n"
         html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
         html += "</div>\n"
         
@@ -36,7 +37,7 @@ module JobMarketAnalytics
           html += "<div class='vacancy'>\n"
           html += "<div class='vacancy-title'>#{escape_html(v.title)}</div>\n"
           html += "<div>Employer: #{escape_html(v.employer) || 'Not specified'}</div>\n"
-          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary}</div>\n"
+          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary} руб.</div>\n"
           html += "<div class='vacancy-description'>#{escape_html(v.description || 'No description')}</div>\n"
           html += "<div>\n"
           v.extract_technologies.each do |tech|
@@ -68,12 +69,6 @@ module JobMarketAnalytics
         salaries = @vacancies.map(&:average_salary).compact
         return 0 if salaries.empty?
         (salaries.sum / salaries.size).round
-      end
-
-      def average_salary_formatted
-        avg = average_salary
-        return "No data" if avg == 0
-        avg.to_s
       end
 
       def unique_employers_count
