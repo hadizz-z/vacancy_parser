@@ -1,11 +1,18 @@
-    module JobMarketAnalytics
+module JobMarketAnalytics
   module Models
     class Vacancy
       attr_reader :title, :salary, :description, :employer, :url, :published_at
 
       def initialize(attributes = {})
         @title = attributes[:title] || attributes['title']
-        @salary = attributes[:salary] || attributes['salary']
+        
+        salary_data = attributes[:salary] || attributes['salary']
+        @salary = if salary_data.is_a?(Hash)
+                    salary_data.transform_keys(&:to_sym)
+                  else
+                    salary_data
+                  end
+        
         @description = attributes[:description] || attributes['description']
         @employer = attributes[:employer] || attributes['employer']
         @url = attributes[:url] || attributes['url']
