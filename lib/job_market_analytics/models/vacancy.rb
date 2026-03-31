@@ -1,4 +1,4 @@
-module JobMarketAnalytics
+    module JobMarketAnalytics
   module Models
     class Vacancy
       attr_reader :title, :salary, :description, :employer, :url, :published_at
