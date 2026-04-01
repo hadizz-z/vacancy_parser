@@ -2,11 +2,14 @@ module JobMarketAnalytics
   module Reporters
     class HtmlReporter
       attr_reader :vacancies, :title, :output_path
+      attr_accessor :error
 
-      def initialize(vacancies, title = "Job Market Report", output_path = nil)
+      def initialize(vacancies, title = "Job Market Report", total = "0", output_path = nil)
         @vacancies = vacancies
         @title = title
+        @total = total
         @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
+        @error = nil
       end
 
       def generate
@@ -17,6 +20,7 @@ module JobMarketAnalytics
         html += "<style>\n"
         html += "body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }\n"
         html += "h1 { color: #333; }\n"
+        html += ".error { background: #ffebee; color: #c62828; padding: 20px; border-radius: 8px; border-left: 4px solid #c62828; margin: 20px 0; }\n"
         html += ".stats { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; }\n"
         html += ".vacancy { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }\n"
         html += ".vacancy-title { font-size: 1.2em; font-weight: bold; color: #667eea; }\n"
@@ -26,27 +30,35 @@ module JobMarketAnalytics
         html += "</style>\n"
         html += "</head>\n<body>\n"
         html += "<h1>#{@title}</h1>\n"
-        html += "<div class='stats'>\n"
-        html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
-        html += "<p>Average salary: <strong>#{average_salary} rub.</strong></p>\n"
-        html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
-        html += "</div>\n"
         
-        @vacancies.each do |v|
-          html += "<div class='vacancy'>\n"
-          html += "<div class='vacancy-title'>#{escape_html(v.title)}</div>\n"
-          html += "<div>Employer: #{escape_html(v.employer) || 'Not specified'}</div>\n"
-          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary}</div>\n"
-          html += "<div class='vacancy-description'>#{escape_html(v.description || 'No description')}</div>\n"
-          html += "<div>\n"
-          v.extract_technologies.each do |tech|
-            html += "<span class='tech-tag'>#{tech}</span>\n"
-          end
+        if @error
+          html += "<div class='error'>\n"
+          html += "<strong>⚠️ Ошибка</strong><br>\n"
+          html += "#{escape_html(@error)}\n"
           html += "</div>\n"
-          if v.url
-            html += "<a href='#{v.url}' target='_blank'>View details</a>\n"
-          end
+        else
+          html += "<div class='stats'>\n"
+          html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
+          html += "<p>Average salary: <strong>#{average_salary} rub.</strong></p>\n"
+          html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
           html += "</div>\n"
+          
+          @vacancies.each do |v|
+            html += "<div class='vacancy'>\n"
+            html += "<div class='vacancy-title'>#{escape_html(v.title)}</div>\n"
+            html += "<div>Employer: #{escape_html(v.employer) || 'Not specified'}</div>\n"
+            html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary}</div>\n"
+            html += "<div class='vacancy-description'>#{escape_html(v.description || 'No description')}</div>\n"
+            html += "<div>\n"
+            v.extract_technologies.each do |tech|
+              html += "<span class='tech-tag'>#{tech}</span>\n"
+            end
+            html += "</div>\n"
+            if v.url
+              html += "<a href='#{v.url}' target='_blank'>View details</a>\n"
+            end
+            html += "</div>\n"
+          end
         end
         
         html += "<hr><p style='text-align: center; color: #999;'>Generated: #{Time.now}</p>\n"
