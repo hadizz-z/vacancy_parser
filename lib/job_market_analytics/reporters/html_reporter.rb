@@ -1,13 +1,12 @@
 module JobMarketAnalytics
   module Reporters
     class HtmlReporter
-      attr_reader :vacancies, :title, :output_path, :average_salary
+      attr_reader :vacancies, :title, :output_path
 
-      def initialize(vacancies, title = "Job Market Report", average_salary_formatted = "0", output_path = nil)
+      def initialize(vacancies, title = "Job Market Report", output_path = nil)
         @vacancies = vacancies
         @title = title
         @output_path = output_path || "report_#{Time.now.strftime('%Y%m%d_%H%M%S')}.html"
-        @average_salary = average_salary_formatted
       end
 
       def generate
@@ -29,7 +28,7 @@ module JobMarketAnalytics
         html += "<h1>#{@title}</h1>\n"
         html += "<div class='stats'>\n"
         html += "<p>Total vacancies: <strong>#{@vacancies.size}</strong></p>\n"
-        html += "<p>Average salary: <strong>≈#{@average_salary / @vacancies.size} руб.</strong></p>\n"
+        html += "<p>Average salary: <strong>#{average_salary} rub.</strong></p>\n"
         html += "<p>Unique employers: <strong>#{unique_employers_count}</strong></p>\n"
         html += "</div>\n"
         
@@ -37,7 +36,7 @@ module JobMarketAnalytics
           html += "<div class='vacancy'>\n"
           html += "<div class='vacancy-title'>#{escape_html(v.title)}</div>\n"
           html += "<div>Employer: #{escape_html(v.employer) || 'Not specified'}</div>\n"
-          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary} руб.</div>\n"
+          html += "<div class='vacancy-salary'>Salary: #{v.formatted_salary}</div>\n"
           html += "<div class='vacancy-description'>#{escape_html(v.description || 'No description')}</div>\n"
           html += "<div>\n"
           v.extract_technologies.each do |tech|
