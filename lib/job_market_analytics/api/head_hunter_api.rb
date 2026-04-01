@@ -44,17 +44,14 @@ module JobMarketAnalytics
           
         rescue SocketError, Errno::ECONNREFUSED, Errno::ETIMEDOUT, Net::OpenTimeout, Net::ReadTimeout => e
           @error = "Сайт hh.ru недоступен. Проверьте интернет-соединение."
-          puts @error
           []
           
         rescue JSON::ParserError => e
           @error = "Ошибка при обработке данных от сервера"
-          puts @error
           []
           
         rescue StandardError => e
           @error = "Произошла ошибка: #{e.message}"
-          puts @error
           []
         end
       end
