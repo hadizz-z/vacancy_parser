@@ -1,130 +1,119 @@
-﻿require 'telegram/bot'
-require 'dotenv/load'
-require 'logger'
-require 'vacancy_parser'
+﻿require 'json'
+require 'net/http'
+require 'uri'
 
-require_relative 'states'
-require_relative 'ui_helpers'
+TOKEN = '8682482122:AAFwBJuzwaPQpExqAiR9SMoQq_X1vY7kxxs'
 
-LOGGER = Logger.new(STDOUT)
-LOGGER.level = Logger::INFO
+puts "=== Job Market Bot ==="
+puts "Starting..."
 
-class VacancyBot
-  def initialize
-    @token = ENV['TELEGRAM_BOT_TOKEN']
-    unless @token && @token != 'YOUR_BOT_TOKEN_HERE'
-      puts "ERROR: TELEGRAM_BOT_TOKEN not set in .env file"
-      exit
-    end
-    @cache = {}
-    LOGGER.info("Bot initialized")
-  end
+def send_message(chat_id, text)
+  uri = URI.parse("https://api.telegram.org/bot#{TOKEN}/sendMessage")
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.open_timeout = 10
+  http.read_timeout = 10
   
-  def run
-    LOGGER.info("Starting bot...")
-    Telegram::Bot::Client.run(@token) do |bot|
-      LOGGER.info("Bot started!")
-      bot.listen do |message|
-        handle_message(bot, message) if message.text
-      end
-    end
-  end
+  request = Net::HTTP::Post.new(uri)
+  request.set_form_data({'chat_id' => chat_id, 'text' => text})
   
-  private
-  
-  def handle_message(bot, message)
-    user_id = message.from.id
-    text = message.text.strip
-    
-    case text
-    when '/start'
-      start_command(bot, message)
-    when '/search'
-      start_search(bot, message)
-    else
-      state = States.get(user_id)
-      if state == States::AWAITING_KEYWORD
-        process_search(bot, message, text)
-      else
-        show_menu(bot, message)
-      end
-    end
-  end
-  
-  def start_command(bot, message)
-    States.clear(message.from.id)
-    bot.api.send_message(
-      chat_id: message.chat.id,
-      text: "Job market analytics bot\nType /search to begin",
-      reply_markup: menu_keyboard
-    )
-  end
-  
-  def menu_keyboard
-    Telegram::Bot::Types::ReplyKeyboardMarkup.new(
-      keyboard: [[{ text: '/search' }]],
-      resize_keyboard: true
-    )
-  end
-  
-  def show_menu(bot, message)
-    bot.api.send_message(
-      chat_id: message.chat.id,
-      text: "Choose action:",
-      reply_markup: menu_keyboard
-    )
-  end
-  
-  def start_search(bot, message)
-    States.set(message.from.id, States::AWAITING_KEYWORD)
-    bot.api.send_message(
-      chat_id: message.chat.id,
-      text: "Enter profession:",
-      reply_markup: Telegram::Bot::Types::ReplyKeyboardRemove.new(remove_keyboard: true)
-    )
-  end
-  
-  def process_search(bot, message, keyword)
-    chat_id = message.chat.id
-    bot.api.send_message(chat_id: chat_id, text: "Searching for '#{keyword}'...")
-    
-    begin
-      if defined?(JobMarketAnalytics) && JobMarketAnalytics.respond_to?(:analyze_and_report)
-        result = JobMarketAnalytics.analyze_and_report(keyword)
-      else
-        result = mock_result(keyword)
-      end
-      
-      text = UiHelpers.short_teaser(
-        result[:vacancies_count],
-        result[:average_salary],
-        result[:median_salary],
-        result[:top_skills]
-      )
-      
-      bot.api.send_message(chat_id: chat_id, text: text)
-    rescue => e
-      bot.api.send_message(chat_id: chat_id, text: "Error: #{e.message}")
-    end
-    
-    States.set(message.from.id, States::IDLE)
-    show_menu(bot, message)
-  end
-  
-  def mock_result(keyword)
-    {
-      vacancies_count: 42,
-      average_salary: 150000,
-      median_salary: 140000,
-      top_skills: [["Ruby", 30], ["Rails", 25], ["SQL", 20]],
-      top_employers: [["Yandex", 10], ["Tinkoff", 8]],
-      experience: {"between1And3" => 20, "between3And6" => 15},
-      schedule: {"remote" => 25, "fullDay" => 15}
-    }
-  end
+  http.request(request)
+  puts "Sent: #{text[0..50]}"
+rescue => e
+  puts "Send error: #{e.message}"
 end
 
-if __FILE__ == 
-  bot = VacancyBot.new
-  bot.run
+def get_updates(offset = nil)
+  uri = URI.parse("https://api.telegram.org/bot#{TOKEN}/getUpdates")
+  params = {'timeout' => 25}
+  params['offset'] = offset if offset
+  uri.query = URI.encode_www_form(params)
+  
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  http.open_timeout = 10
+  http.read_timeout = 10
+  
+  response = http.request(Net::HTTP::Get.new(uri))
+  JSON.parse(response.body)
+rescue => e
+  puts "Get updates error: #{e.message}"
+  {"ok" => false, "result" => []}
+end
+
+puts "Bot is running! Find it at: https://t.me/my_jod_analyst_bot"
+puts "Waiting for messages..."
+
+last_id = nil
+waiting = {}
+
+loop do
+  updates = get_updates(last_id)
+  
+  if updates["ok"] && updates["result"] && updates["result"].any?
+    updates["result"].each do |update|
+      last_id = update["update_id"] + 1
+      
+      if update["message"]
+        chat_id = update["message"]["chat"]["id"]
+        text = update["message"]["text"]
+        
+        puts "Received: #{text}"
+        
+        case text
+        when "/start"
+          send_message(chat_id, "Job Market Bot\nCommands:\n/search - find vacancies\n/help - info")
+          
+        when "/help"
+          send_message(chat_id, "How to use:\n1. Send /search\n2. Enter profession\n3. Get statistics")
+          
+        when "/search"
+          waiting[chat_id] = true
+          send_message(chat_id, "Enter profession name (e.g., Ruby developer, Python):")
+          
+        else
+          if waiting[chat_id]
+            waiting.delete(chat_id)
+            send_message(chat_id, "Searching for '#{text}'... Please wait")
+            
+            begin
+              $LOAD_PATH.unshift(File.expand_path('../../lib', __FILE__))
+              require 'job_market_analytics'
+              
+              api = JobMarketAnalytics::Api::HeadHunterApi.new
+              vacancies_data = api.vacancy_request(text)
+              
+              if vacancies_data && vacancies_data.any?
+                salaries = []
+                vacancies_data.each do |v|
+                  if v['salary'] && v['salary']['from']
+                    salaries << v['salary']['from']
+                  end
+                end
+                
+                avg_salary = salaries.sum / salaries.size if salaries.any?
+                
+                response = "RESULTS for '#{text}':\n\n"
+                response += "Vacancies found: #{vacancies_data.size}\n"
+                response += "Average salary: #{avg_salary.to_i} rub\n" if avg_salary
+                response += "\nSend /search to try another profession"
+                
+                send_message(chat_id, response)
+              else
+                send_message(chat_id, "No vacancies found for '#{text}'")
+              end
+              
+            rescue => e
+              send_message(chat_id, "Error: #{e.message}")
+              puts "Error: #{e.message}"
+            end
+          else
+            send_message(chat_id, "Send /search to find vacancies")
+          end
+        end
+      end
+    end
+  end
+  
+  sleep(1)
 end
