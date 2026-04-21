@@ -2,6 +2,7 @@ require_relative "job_market_analytics/version"
 require_relative "job_market_analytics/models/vacancy"
 require_relative "job_market_analytics/reporters/html_reporter"
 require_relative "job_market_analytics/statistics/statistics_calculator"
+require_relative "job_market_analytics/api/head_hunter_api"
 
 module JobMarketAnalytics
   class Error < StandardError; end
