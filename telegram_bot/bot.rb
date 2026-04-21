@@ -1,18 +1,15 @@
-﻿require 'socksify/http'
-require 'json'
+﻿require 'json'
 require 'net/http'
 require 'uri'
 
 TOKEN = '8682482122:AAFwBJuzwaPQpExqAiR9SMoQq_X1vY7kxxs'
-PROXY_ADDR = '127.0.0.1'
-PROXY_PORT = 10808
 
 puts "=== Job Market Bot ==="
 puts "Starting..."
 
 def send_message(chat_id, text)
   uri = URI.parse("https://api.telegram.org/bot#{TOKEN}/sendMessage")
-  http = Net::HTTP.SOCKSProxy(PROXY_ADDR, PROXY_PORT).new(uri.host, uri.port)
+  http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
   http.open_timeout = 10
   http.read_timeout = 10
@@ -32,7 +29,7 @@ def get_updates(offset = nil)
   params['offset'] = offset if offset
   uri.query = URI.encode_www_form(params)
   
-  http = Net::HTTP.SOCKSProxy(PROXY_ADDR, PROXY_PORT).new(uri.host, uri.port)
+  http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
   http.open_timeout = 10
   http.read_timeout = 10
