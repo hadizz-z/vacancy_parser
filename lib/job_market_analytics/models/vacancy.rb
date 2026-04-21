@@ -1,7 +1,7 @@
 module JobMarketAnalytics
   module Models
     class Vacancy
-      attr_reader :title, :salary, :description, :employer, :url, :published_at
+      attr_reader :title, :salary, :description, :employer, :url, :published_at, :experience, :schedule
 
       def initialize(attributes = {})
         @title = attributes[:title] || attributes['title']
@@ -17,6 +17,8 @@ module JobMarketAnalytics
         @employer = attributes[:employer] || attributes['employer']
         @url = attributes[:url] || attributes['url']
         @published_at = attributes[:published_at] || attributes['published_at']
+        @experience = attributes[:experience] || attributes['experience']
+        @schedule = attributes[:schedule] || attributes['schedule']
       end
 
       def salary_present?
@@ -52,8 +54,14 @@ module JobMarketAnalytics
       def extract_technologies
         return [] unless @description
         
-        techs = ['Ruby', 'Rails', 'Python', 'JavaScript', 'React', 'Java', 'PostgreSQL', 'Docker']
-        techs.select { |tech| @description.include?(tech) }
+        techs = [
+          'Ruby', 'Rails', 'Python', 'Django', 'FastAPI', 'JavaScript', 'React', 'Vue', 'Angular',
+          'Java', 'Spring', 'Go', 'C++', 'C#', 'PHP', 'Laravel', 'PostgreSQL', 'MySQL', 'MongoDB',
+          'Redis', 'Docker', 'Kubernetes', 'Git', 'Linux', 'CI/CD', 'REST API', 'GraphQL', 'RabbitMQ', 'Kafka'
+        ]
+        
+        desc_downcase = @description.downcase
+        techs.select { |tech| desc_downcase.include?(tech.downcase) }
       end
     end
   end

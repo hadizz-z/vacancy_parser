@@ -65,14 +65,14 @@ module JobMarketAnalytics
         html += "</body>\n</html>"
         
         File.write(@output_path, html)
-        puts "HTML report saved to #{@output_path}"
+        #puts "HTML report saved to #{@output_path}" боту не нужно
         @output_path
       end
 
-      def generate_and_open
-        generate
-        open_in_browser
-      end
+      # def generate_and_open
+      #   generate
+      #   open_in_browser
+      # end
 
       private
 
@@ -98,9 +98,9 @@ module JobMarketAnalytics
         end
       end
 
-      def open_in_browser
-        system("start #{@output_path}")
-      end
+      # def open_in_browser
+      #   system("start #{@output_path}")
+      #end
     end
   end
 end
