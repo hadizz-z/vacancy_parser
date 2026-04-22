@@ -23,30 +23,41 @@ module JobMarketAnalytics
   # end
 
   def self.analyze_and_report(keywords, output_path = nil)
+    # чистим старые файлы 
+    clean_old_reports
+
     api = Api::HeadHunterApi.new
     raw_data = api.vacancy_request(keywords)
     
-    return { error: api.error } unless api.success?
+    return { error: api.error } if api.error
+    # защита от 0 вакансий
+    return { error: "По запросу '#{keywords}' ничего не найдено." } if raw_data.nil? || raw_data.empty?
 
     vacancies = raw_data.map { |data| Models::Vacancy.new(data) }
     calculator = StatisticsCalculator.new(vacancies)
     
-    # генерируем HTML
     reporter = Reporters::HtmlReporter.new(vacancies, "Отчет: #{keywords}", calculator.average_salary, output_path)
     report_file = reporter.generate
 
-    # возвращаем боту хэш со всем необходимым
     {
       error: nil,
       vacancies_count: calculator.total_count,
       average_salary: calculator.average_salary,
       median_salary: calculator.median_salary,
-      top_skills: calculator.top_skills,
+      top_skills: calculator.top_skills(10),
       top_employers: calculator.top_employers,
       experience: calculator.experience_distribution,
       schedule: calculator.schedule_distribution,
       report_path: report_file
     }
   end
-end
 
+  # Метод-уборщик (удаляет HTML файлы старше 1 часа)
+  def self.clean_old_reports(directory = '.')
+    Dir.glob("#{directory}/report_*.html").each do |file|
+      if (Time.now - File.mtime(file)) > 3600
+        File.delete(file)
+      end
+    end
+  end
+end
