@@ -1,9 +1,5 @@
 ﻿require 'telegram/bot'
 
-# Эти библиотеки теперь можно убрать, так как гем telegram/bot сам делает HTTP-запросы
-# require 'json'
-# require 'net/http'
-# require 'uri'
 
 puts " Инициализация бота "
 

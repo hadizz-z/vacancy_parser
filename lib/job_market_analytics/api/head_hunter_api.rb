@@ -20,19 +20,17 @@ module JobMarketAnalytics
         return [] if clean_keywords.empty?
 
         begin
-          # API TrudVsem. Используем поиск по тексту.
-          # Можно добавить параметр &region=61, если нужен только Ростов-на-Дону
           uri = URI("https://opendata.trudvsem.ru/api/v1/vacancies")
           uri.query = URI.encode_www_form({
             text: clean_keywords,
-            limit: 100 # Максимальное количество за один запрос
+            limit: 100
           })
 
           http = Net::HTTP.new(uri.host, uri.port)
           http.use_ssl = true
           
           request = Net::HTTP::Get.new(uri)
-          # TrudVsem не требует сложного User-Agent, но оставим для порядка
+         
           request['User-Agent'] = 'JobAnalysisBot/1.0'
 
           response = http.request(request)
@@ -44,7 +42,7 @@ module JobMarketAnalytics
 
           parsed_data = JSON.parse(response.body)
           
-          # У TrudVsem структура: results -> vacancies -> [ { vacancy: {...} }, ... ]
+         
           raw_results = parsed_data.dig('results', 'vacancies') || []
           
           if raw_results.empty?
