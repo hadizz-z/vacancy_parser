@@ -1,76 +1,206 @@
-﻿require 'telegram/bot'
 
-
-puts " Инициализация бота "
-
-# Подключаем файлы
-$LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
-require 'job_market_analytics'
+require 'telegram/bot'
 require_relative 'states'
 require_relative 'ui_helpers'
 
 TOKEN = '8765953866:AAENBh7dMB5yzEwJWcpCp9PWOooypxSAmOg'
 
-puts " Бот запущен! Ожидание сообщений... "
+puts "Initializing bot..."
 
+def send_main_menu(bot, chat_id)
+  keyboard = [
+    [
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: "Search Vacancies", callback_data: "search"),
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: "Statistics", callback_data: "stats")
+    ],
+    [
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: "Help", callback_data: "help"),
+      Telegram::Bot::Types::InlineKeyboardButton.new(text: "About", callback_data: "about")
+    ]
+  ]
+
+  markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: keyboard)
+
+  bot.api.send_message(
+    chat_id: chat_id,
+    text: "Main Menu\n\nI can analyze job vacancies from HH.ru",
+    reply_markup: markup
+  )
+end
+
+def send_help(bot, chat_id)
+  help_text = """
+Help Information
+
+Available commands:
+/search - start searching for vacancies
+/help - show this help
+
+How to use:
+1. Press 'Search Vacancies' button or type /search
+2. Enter a profession (e.g., Ruby, Python, Java)
+3. Get statistics and HTML report
+
+Examples:
+- Ruby developer
+- Python
+- Java backend
+  """
+
+  bot.api.send_message(chat_id: chat_id, text: help_text)
+  send_main_menu(bot, chat_id)
+end
+
+def process_search(bot, chat_id, keyword)
+  States.set(chat_id, States::IDLE)
+
+  bot.api.send_chat_action(chat_id: chat_id, action: 'typing')
+
+  bot.api.send_message(
+    chat_id: chat_id,
+    text: "Analyzing '#{keyword}'. Loading data from HH.ru, please wait..."
+  )
+
+  result = JobMarketAnalytics.analyze_and_report(keyword)
+
+  if result[:error]
+    bot.api.send_message(chat_id: chat_id, text: "Error: #{result[:error]}")
+  else
+    report = UiHelpers.short_teaser(
+      result[:vacancies_count],
+      result[:average_salary],
+      result[:median_salary],
+      result[:top_skills]
+    )
+
+    keyboard = [
+      [
+        Telegram::Bot::Types::InlineKeyboardButton.new(
+          text: "Full Statistics",
+          callback_data: "full_stats:#{keyword}"
+        ),
+        Telegram::Bot::Types::InlineKeyboardButton.new(
+          text: "Save Result",
+          callback_data: "save:#{keyword}"
+        )
+      ],
+      [
+        Telegram::Bot::Types::InlineKeyboardButton.new(
+          text: "New Search",
+          callback_data: "new_search"
+        )
+      ]
+    ]
+
+    markup = Telegram::Bot::Types::InlineKeyboardMarkup.new(inline_keyboard: keyboard)
+
+    bot.api.send_message(
+      chat_id: chat_id,
+      text: report,
+      reply_markup: markup
+    )
+
+    bot.api.send_document(
+      chat_id: chat_id,
+      document: Faraday::UploadIO.new(result[:report_path], 'text/html')
+    )
+
+    States.save_search_result(chat_id, keyword, result)
+  end
+
+  send_main_menu(bot, chat_id)
+end
+
+def handle_callback(bot, callback_query)
+  chat_id = callback_query.message.chat.id
+  message_id = callback_query.message.message_id
+  data = callback_query.data
+
+  bot.api.answer_callback_query(callback_query_id: callback_query.id)
+
+  case data
+  when "search"
+    States.set(chat_id, States::AWAITING_KEYWORD)
+    bot.api.send_message(chat_id: chat_id, text: "Enter profession name:")
+  when "stats"
+    last_search = States.get_last_search(chat_id)
+    if last_search
+      bot.api.send_message(chat_id: chat_id, text: "Last search: #{last_search[:keyword]}")
+    else
+      bot.api.send_message(chat_id: chat_id, text: "No previous searches found. Press 'Search Vacancies' first.")
+    end
+  when "help"
+    send_help(bot, chat_id)
+    return
+  when "about"
+    bot.api.send_message(
+      chat_id: chat_id,
+      text: "Bot: HH.ru Vacancy Analyzer\nVersion: 1.0\n\nAnalyzes job market and helps find best offers"
+    )
+  when "new_search"
+    States.set(chat_id, States::AWAITING_KEYWORD)
+    bot.api.send_message(chat_id: chat_id, text: "Enter new profession for search:")
+  when /^save:(.+)$/
+    keyword = $1
+    bot.api.send_message(chat_id: chat_id, text: "Search result for '#{keyword}' saved to history")
+  when /^full_stats:(.+)$/
+    keyword = $1
+    bot.api.send_message(chat_id: chat_id, text: "Loading full statistics for '#{keyword}'...")
+  end
+
+  bot.api.edit_message_reply_markup(
+    chat_id: chat_id,
+    message_id: message_id,
+    reply_markup: nil
+  )
+end
+
+# Main bot loop
 Telegram::Bot::Client.run(TOKEN) do |bot|
-  bot.listen do |message|
-    # Заворачиваем в begin/rescue, чтобы бот не умирал от случайных ошибок сети
-    begin
-      # Пропускаем, если это не текстовое сообщение (например, стикер)
-      next unless message.text 
-      
-      chat_id = message.chat.id
-      text = message.text
-      
-      puts "<- Получено от #{chat_id}: #{text}"
-      
-      case text
-      when "/start"
-        bot.api.send_message(chat_id: chat_id, text: "Бот-аналитик HH.ru\nКоманды:\n/search - найти вакансии")
-      
-      when "/search"
-        # Используем ВАШУ машину состояний из states.rb
-        States.set(chat_id, States::AWAITING_KEYWORD)
-        bot.api.send_message(chat_id: chat_id, text: "Введи название профессии (например, Ruby developer):")
-      
-      else
-        # Проверяем состояние пользователя
-        if States.get(chat_id) == States::AWAITING_KEYWORD
-          # Сбрасываем состояние
-          States.set(chat_id, States::IDLE)
-          bot.api.send_message(chat_id: chat_id, text: "Анализирую '#{text}'. Загружаю 5 страниц с HH, подожди...")
-          
-          # Вызов аналитики
-          result = JobMarketAnalytics.analyze_and_report(text)
-          
-          if result[:error]
-            bot.api.send_message(chat_id: chat_id, text: "Ошибка: #{result[:error]}")
-          else
-            # Формируем и отправляем текст
-            report = UiHelpers.short_teaser(
-              result[:vacancies_count],
-              result[:average_salary],
-              result[:median_salary],
-              result[:top_skills]
-            )
-            bot.api.send_message(chat_id: chat_id, text: report)
-            
-            # ОТПРАВКА HTML-ФАЙЛА (Этап 3)
-            # Гем использует Faraday под капотом, поэтому файл передается так:
-            bot.api.send_document(
-              chat_id: chat_id, 
-              document: Faraday::UploadIO.new(result[:report_path], 'text/html')
-            )
-          end
+  puts "Bot is running. Waiting for messages..."
+
+  # Handle text messages
+  Thread.new do
+    bot.listen do |message|
+      begin
+        next unless message.text
+
+        chat_id = message.chat.id
+        text = message.text
+
+        puts "Received from #{chat_id}: #{text}"
+
+        case text
+        when "/start"
+          send_main_menu(bot, chat_id)
+        when "/search"
+          States.set(chat_id, States::AWAITING_KEYWORD)
+          bot.api.send_message(chat_id: chat_id, text: "Enter profession name (e.g., Ruby developer):")
+        when "/help"
+          send_help(bot, chat_id)
         else
-          bot.api.send_message(chat_id: chat_id, text: "Нажми /search чтобы начать поиск.")
+          if States.get(chat_id) == States::AWAITING_KEYWORD
+            process_search(bot, chat_id, text)
+          else
+            send_main_menu(bot, chat_id)
+          end
         end
+      rescue => e
+        puts "Error processing message: #{e.message}"
+        puts e.backtrace
       end
-      
-    rescue => e
-      puts "!!! Ошибка при обработке сообщения: #{e.message}"
-      # Если нужно, можно и боту сообщать: bot.api.send_message(chat_id: message.chat.id, text: "Упс, что-то пошло не так на сервере.")
     end
   end
+
+  # Handle button callbacks
+  bot.listen do |callback_query|
+    begin
+      handle_callback(bot, callback_query)
+    rescue => e
+      puts "Error processing callback: #{e.message}"
+      puts e.backtrace
+    end
+  end
+
+  sleep
 end
