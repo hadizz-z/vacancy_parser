@@ -9,6 +9,7 @@ TOKEN = '8765953866:AAENBh7dMB5yzEwJWcpCp9PWOooypxSAmOg'
 puts "🚀 Initializing bot..."
 
 def send_main_menu(bot, chat_id)
+  #создаем кнопки 
   keyboard = [
     [
       Telegram::Bot::Types::InlineKeyboardButton.new(text: "Начать поиск", callback_data: "search"),
