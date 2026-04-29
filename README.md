@@ -1,6 +1,6 @@
 # JobMarketAnalytics
 
-Ruby gem для анализа рынка вакансий и генерации HTML отчетов.
+**Vacancy Parser** - анализатор рынка вакансий с hh.ru и Telegram бот
 
 ## Концепция
 
