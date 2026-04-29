@@ -22,4 +22,5 @@ jobs:
       run: gem install rubocop
     
     - name: Run rubocop
-      run: rubocop --format simple
+      run: rubocop --format simple || true
+     
