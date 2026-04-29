@@ -1,4 +1,4 @@
-
+# telegram_bot/states.rb
 require 'json'
 
 class StatesManager
@@ -30,7 +30,7 @@ class StatesManager
   def save_search_result(user_id, keyword, data)
     @user_data[user_id.to_s] = {
       keyword: keyword,
-      data: data,
+      result: data,
       timestamp: Time.now.to_i
     }
     save_data
@@ -38,23 +38,29 @@ class StatesManager
 
   def get_last_search(user_id)
     data = @user_data[user_id.to_s]
-    if data && (Time.now.to_i - data[:timestamp]) < 1800
+    if data && (Time.now.to_i - data[:timestamp]) < 1800  # 30 минут актуальности
       data
     else
       nil
     end
   end
 
+  def get_search_history(user_id, limit = 5)
+    # Можно реализовать историю поисков
+    []
+  end
+
   private
 
   def load_data
     if File.exist?(@storage_file)
-      data = JSON.parse(File.read(@storage_file), symbolize_names: true)
+      file_content = File.read(@storage_file)
+      data = JSON.parse(file_content, symbolize_names: true)
       @user_states = data[:user_states] || {}
       @user_data = data[:user_data] || {}
     end
   rescue => e
-    puts "Error loading data: #{e.message}"
+    puts "⚠️ Error loading data: #{e.message}"
     @user_states = {}
     @user_data = {}
   end
@@ -65,9 +71,9 @@ class StatesManager
       user_data: @user_data
     }))
   rescue => e
-    puts "Error saving data: #{e.message}"
+    puts "⚠️ Error saving data: #{e.message}"
   end
 end
 
-# Create global instance for backward compatibility
+# Глобальный экземпляр для обратной совместимости
 States = StatesManager.new
