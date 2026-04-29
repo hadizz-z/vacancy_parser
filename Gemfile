@@ -8,4 +8,5 @@ gem 'dotenv'
 group :development, :test do
   gem 'rspec'
   gem 'pry'
+  gem 'rubocop', '~> 1.50', require: false   
 end
