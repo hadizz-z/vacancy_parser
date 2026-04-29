@@ -9,4 +9,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.homepage    = "https://github.com/hadizz-z/vacancy_parser"
   s.license     = "MIT"
+  
+
+  s.required_ruby_version = '>= 2.7'
+  s.metadata = { 'rubygems_mfa_required' => 'false' }
 end
