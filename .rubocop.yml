@@ -1,0 +1,28 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.0
+  Exclude:
+    - 'spec/**/*'
+    - 'vendor/**/*'
+    - 'telegram_bot/bot_data.json'
+    - 'telegram_bot/bot_states.json'
+    - '*.html'
+
+Metrics/MethodLength:
+  Max: 25
+  Exclude:
+    - 'telegram_bot/bot.rb'
+    
+Layout/LineLength:
+  Max: 150
+  Exclude:
+    - 'telegram_bot/bot.rb'
+
+Style/Documentation:
+  Enabled: false
+  
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/GlobalVars:
+  Enabled: false
