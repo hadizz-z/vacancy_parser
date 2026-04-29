@@ -63,6 +63,12 @@ job_market_analytics/
 ├── README.md
 
 └── job_market_analytics.gemspec
+**Команды бота**
+Команда	Действие
+/start	Главное меню
+/search	Поиск вакансий
+/help	Помощь
+/cancel	Отмена
 
 Авторы
 
