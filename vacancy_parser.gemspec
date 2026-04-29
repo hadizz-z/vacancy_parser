@@ -3,7 +3,7 @@ Gem::Specification.new do |s|
   s.version     = '0.1.0'
   s.summary     = "Vacancy parser for hh.ru"
   s.description = "Parses vacancies from hh.ru and generates statistics"
-  s.authors     = ["Your Team"]
+  s.authors     = ["Сентюрина Дарья ","Исакова Хадижат"]
   s.email       = ["team@example.com"]
   s.files       = Dir["lib/**/*.rb", "README.md", "LICENSE"]
   s.require_paths = ["lib"]
